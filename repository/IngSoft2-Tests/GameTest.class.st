@@ -29,10 +29,30 @@ GameTest >> assertCurrentPositionOf: aPlayer in: aGame equals: finalPosition [
 ]
 
 { #category : #assertions }
+GameTest >> assertNumberOfCardsAffectingAPlayer: aPlayer in: aGame equals: aNumber [
+	self assert: (aGame numberOfCardsAffectingAPlayer: aPlayer) equals: aNumber
+]
+
+{ #category : #assertions }
+GameTest >> assertNumberOfCardsAffectingASlot: aSlot in: aGame equals: aNumber [
+	self assert: (aGame numberOfCardsAffectingASlot: aSlot) equals: aNumber
+]
+
+{ #category : #assertions }
+GameTest >> assertNumberOfCardsInTheDeckOfAPlayer: aPlayer in: aGame equals: aNumber [
+	self assert: (aGame numberOfCardsInTheDeckOfPlayer: aPlayer) equals: aNumber.
+]
+
+{ #category : #assertions }
 GameTest >> assertRankingOf: aPlayer in: aGame  equals: aRankPosition [
 	self
 		assert: (aGame rankingOf: aPlayer)
 		equals: aRankPosition.
+]
+
+{ #category : #assertions }
+GameTest >> assertStateOfASlot: aSlot equals: aState [
+	self assert: ((aSlot state) isKindOf: aState) equals: true.
 ]
 
 { #category : #utilities }
@@ -227,9 +247,75 @@ GameTest >> testCancellationCantCancellACardThatIsntAffectingThePlayer [
 	game player: pancho playsTheCard: Overload onTarget: juan.
 	game playTurn.
 	game playTurn.
-	self assert: (game numberOfCardsAffectingPlayer: pancho) equals: 1.
-	self assert: (game numberOfCardsAffectingPlayer: juan) equals: 1.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 1.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 1.
 	self should: [game player: pancho playsTheCard: Cancellation onTarget: {Speed . pancho}] raise: Error withMessageText: 'There isn`t that card affecting this player'.
+]
+
+{ #category : #tests }
+GameTest >> testCancellationCantCancellACardThatIsntAffectingTheSlot [
+	| game players |
+	players := OrderedCollection with: juan with: pancho.
+	aBoard := Board
+		ofASlotDistribution:
+			{NoEffect createSlot.
+			NoEffect createSlot.
+			CardGiver createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			SpeedUp createSlot}.
+	game := Game
+		playedBy: players
+		thatUse: aDice
+		on: aBoard
+		for: numberOfRoundsToBePlayed
+		withASetOf: cards.
+	game giveCard: Reversal createCard toPlayer: juan.
+	game player: juan playsTheCard: Acceleration onTarget: players.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 0.
+	self should: [game player: juan playsTheCard: Cancellation onTarget: {Reversal . aBoard slotNumber: 10}] raise: Error withMessageText: 'There isn`t that card affecting this slot'.
+]
+
+{ #category : #tests }
+GameTest >> testCancellationEliminatesAReversalCardAndChangeTheStateOfTheSlot [
+	| game players |
+	players := OrderedCollection with: juan with: pancho.
+	aBoard := Board
+		ofASlotDistribution:
+			{NoEffect createSlot.
+			NoEffect createSlot.
+			CardGiver createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			SpeedUp createSlot}.
+	game := Game
+		playedBy: players
+		thatUse: aDice
+		on: aBoard
+		for: numberOfRoundsToBePlayed
+		withASetOf: cards.
+	game giveCard: Reversal createCard toPlayer: juan.
+	
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 0.
+	
+	game player: juan playsTheCard: Reversal onTarget: (aBoard slotNumber: 10).
+	
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: InvertedState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 1.
+	
+	game player: juan playsTheCard: Cancellation onTarget:{Reversal.(aBoard slotNumber: 10)}.
+	
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 0
 ]
 
 { #category : #tests }
@@ -264,11 +350,11 @@ GameTest >> testCancellationEliminatesOneActiveCardOverAPlayer [
 	game playTurn.
 	game player: juan playsTheCard: Speed onTarget: pancho.
 	game playTurn.
-	self assert: (game numberOfCardsAffectingPlayer: pancho) equals: 2.
-	self assert: (game numberOfCardsAffectingPlayer: juan) equals: 1.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 2.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 1.
 	game player: pancho playsTheCard: Cancellation onTarget: {Overload . pancho}.
-	self assert: (game numberOfCardsAffectingPlayer: pancho) equals: 1.
-	self assert: (game numberOfCardsAffectingPlayer: juan) equals: 1
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 1.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 1.
 ]
 
 { #category : #tests }
@@ -368,10 +454,10 @@ GameTest >> testHappyPathDeterministic [
 	self assertCurrentPositionOf: pancho in: game equals: 1.
 	self assertCurrentNumberOfRoundsMadeBy: juan in: game equals: 0.
 	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 0.
-	self assert: (game numberOfCardsAffectingPlayer: juan) equals: 0.
-	self assert: (game numberOfCardsAffectingPlayer: pancho) equals: 0.
-	self assert: (game numberOfCardsInTheDeckOfPlayer: juan) equals: 2.
-	self assert: (game numberOfCardsInTheDeckOfPlayer: pancho) equals: 2.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 0.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 0.
+	self assertNumberOfCardsInTheDeckOfAPlayer: juan in: game equals: 2.
+	self assertNumberOfCardsInTheDeckOfAPlayer: pancho in: game equals: 2.
 	
 	"Juan's turn"
 	game playTurn.
@@ -379,10 +465,10 @@ GameTest >> testHappyPathDeterministic [
 	self assertCurrentPositionOf: pancho in: game equals: 1.
 	self assertCurrentNumberOfRoundsMadeBy: juan in: game equals: 0.
 	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 0.
-	self assert: (game numberOfCardsAffectingPlayer: juan) equals: 0.
-	self assert: (game numberOfCardsAffectingPlayer: pancho) equals: 0.
-	self assert: (game numberOfCardsInTheDeckOfPlayer: juan) equals: 2.
-	self assert: (game numberOfCardsInTheDeckOfPlayer: pancho) equals: 2.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 0.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 0.
+	self assertNumberOfCardsInTheDeckOfAPlayer: juan in: game equals: 2.
+	self assertNumberOfCardsInTheDeckOfAPlayer: pancho in: game equals: 2.
 	
 	"Pancho's turn"
 	game playTurn.
@@ -390,10 +476,10 @@ GameTest >> testHappyPathDeterministic [
 	self assertCurrentPositionOf: pancho in: game equals: 4.
 	self assertCurrentNumberOfRoundsMadeBy: juan in: game equals: 0.
 	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 1.
-	self assert: (game numberOfCardsAffectingPlayer: juan) equals: 0.
-	self assert: (game numberOfCardsAffectingPlayer: pancho) equals: 0.
-	self assert: (game numberOfCardsInTheDeckOfPlayer: juan) equals: 2.
-	self assert: (game numberOfCardsInTheDeckOfPlayer: pancho) equals: 2.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 0.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 0.
+	self assertNumberOfCardsInTheDeckOfAPlayer: juan in: game equals: 2.
+	self assertNumberOfCardsInTheDeckOfAPlayer: pancho in: game equals: 2.
 	
 	"Juan's turn"
 	game player: juan playsTheCard: Acceleration onTarget: players.
@@ -402,10 +488,10 @@ GameTest >> testHappyPathDeterministic [
 	self assertCurrentPositionOf: pancho in: game equals: 4.
 	self assertCurrentNumberOfRoundsMadeBy: juan in: game equals: 0.
 	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 1.
-	self assert: (game numberOfCardsAffectingPlayer: juan) equals: 1.
-	self assert: (game numberOfCardsAffectingPlayer: pancho) equals: 1.
-	self assert: (game numberOfCardsInTheDeckOfPlayer: juan) equals: 1.
-	self assert: (game numberOfCardsInTheDeckOfPlayer: pancho) equals: 2.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 1.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 1.
+	self assertNumberOfCardsInTheDeckOfAPlayer: juan in: game equals: 1.
+	self assertNumberOfCardsInTheDeckOfAPlayer: pancho in: game equals: 2.
 	
 	"Pancho's turn"
 	game player: pancho playsTheCard: Overload onTarget: juan.
@@ -414,10 +500,10 @@ GameTest >> testHappyPathDeterministic [
 	self assertCurrentPositionOf: pancho in: game equals: 7.
 	self assertCurrentNumberOfRoundsMadeBy: juan in: game equals: 0.
 	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 1.
-	self assert: (game numberOfCardsAffectingPlayer: juan) equals: 2.
-	self assert: (game numberOfCardsAffectingPlayer: pancho) equals: 1.
-	self assert: (game numberOfCardsInTheDeckOfPlayer: juan) equals: 1.
-	self assert: (game numberOfCardsInTheDeckOfPlayer: pancho) equals: 1.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 2.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 1.
+	self assertNumberOfCardsInTheDeckOfAPlayer: juan in: game equals: 1.
+	self assertNumberOfCardsInTheDeckOfAPlayer: pancho in: game equals: 1.
 	
 	"Juan's turn"
 	game player: juan playsTheCard: Cancellation onTarget: { Overload. juan }.
@@ -426,10 +512,10 @@ GameTest >> testHappyPathDeterministic [
 	self assertCurrentPositionOf: pancho in: game equals: 7.
 	self assertCurrentNumberOfRoundsMadeBy: juan in: game equals: 1.
 	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 1.
-	self assert: (game numberOfCardsAffectingPlayer: juan) equals: 1.
-	self assert: (game numberOfCardsAffectingPlayer: pancho) equals: 1.
-	self assert: (game numberOfCardsInTheDeckOfPlayer: juan) equals: 0.
-	self assert: (game numberOfCardsInTheDeckOfPlayer: pancho) equals: 1.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 1.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 1.
+	self assertNumberOfCardsInTheDeckOfAPlayer: juan in: game equals: 0.
+	self assertNumberOfCardsInTheDeckOfAPlayer: pancho in: game equals: 1.
 	
 	"Pancho's turn -> steps on a MoonWalk slot so Juan moves backwards 2 slots (by the given N in MoonWalk initialization)."
 	game playTurn.
@@ -437,10 +523,10 @@ GameTest >> testHappyPathDeterministic [
 	self assertCurrentPositionOf: pancho in: game equals: 3.
 	self assertCurrentNumberOfRoundsMadeBy: juan in: game equals: 1.
 	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 2.
-	self assert: (game numberOfCardsAffectingPlayer: juan) equals: 1.
-	self assert: (game numberOfCardsAffectingPlayer: pancho) equals: 1.
-	self assert: (game numberOfCardsInTheDeckOfPlayer: juan) equals: 0.
-	self assert: (game numberOfCardsInTheDeckOfPlayer: pancho) equals: 1.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 1.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 1.
+	self assertNumberOfCardsInTheDeckOfAPlayer: juan in: game equals: 0.
+	self assertNumberOfCardsInTheDeckOfAPlayer: pancho in: game equals: 1.
 	
 	"Juan's turn"
 	game playTurn.
@@ -448,10 +534,10 @@ GameTest >> testHappyPathDeterministic [
 	self assertCurrentPositionOf: pancho in: game equals: 3.
 	self assertCurrentNumberOfRoundsMadeBy: juan in: game equals: 2.
 	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 2.
-	self assert: (game numberOfCardsAffectingPlayer: juan) equals: 1.
-	self assert: (game numberOfCardsAffectingPlayer: pancho) equals: 1.
-	self assert: (game numberOfCardsInTheDeckOfPlayer: juan) equals: 0.
-	self assert: (game numberOfCardsInTheDeckOfPlayer: pancho) equals: 1.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 1.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 1.
+	self assertNumberOfCardsInTheDeckOfAPlayer: juan in: game equals: 0.
+	self assertNumberOfCardsInTheDeckOfAPlayer: pancho in: game equals: 1.
 	
 	"Pancho's turn -> steps on a MoonWalk slot so Juan moves backwards 2 slots (by the given N in MoonWalk initialization)"
 	game player: pancho playsTheCard: Redo onTarget: { Acceleration. juan }.
@@ -460,10 +546,144 @@ GameTest >> testHappyPathDeterministic [
 	self assertCurrentPositionOf: pancho in: game equals: 3.
 	self assertCurrentNumberOfRoundsMadeBy: juan in: game equals: 2.
 	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 3.
-	self assert: (game numberOfCardsAffectingPlayer: juan) equals: 0.
-	self assert: (game numberOfCardsAffectingPlayer: pancho) equals: 1.
-	self assert: (game numberOfCardsInTheDeckOfPlayer: juan) equals: 0.
-	self assert: (game numberOfCardsInTheDeckOfPlayer: pancho) equals: 0.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 0.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 1.
+	self assertNumberOfCardsInTheDeckOfAPlayer: juan in: game equals: 0.
+	self assertNumberOfCardsInTheDeckOfAPlayer: pancho in: game equals: 0.
+	
+	self assert: game hasWinner equals: true.
+	self assertRankingOf: pancho in: game equals: 1.
+	self assertRankingOf: juan in: game equals: 2.
+]
+
+{ #category : #tests }
+GameTest >> testHappyPathDeterministicWithReversalCard [
+	| game players |
+	players := OrderedCollection with: juan with: pancho.
+	cards := { Acceleration. Cancellation. Overload. Reversal. Redo. Repeat. Speed }.
+	aBoard := Board
+		ofASlotDistribution:
+			{SpeedUp createSlot.
+			NoEffect createSlot.
+			(MoonWalk createSlotWithN: 2).
+			AtomicBomb createSlot.
+			NoEffect createSlot.
+			CardGiver createSlot.
+			NoEffect createSlot.
+			WormHole createSlot.
+			NoEffect createSlot.
+			SpeedUp createSlot}.		
+	
+	numberOfRoundsToBePlayed := 3.
+	
+	game := Game
+		playedBy: players
+		thatUse: aDice
+		on: aBoard
+		for: numberOfRoundsToBePlayed
+		withASetOf: cards.
+		
+	"assert initial values"
+	self assertCurrentPositionOf: juan in: game equals: 1.
+	self assertCurrentPositionOf: pancho in: game equals: 1.
+	self assertCurrentNumberOfRoundsMadeBy: juan in: game equals: 0.
+	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 0.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 0.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 0.
+	self assertNumberOfCardsInTheDeckOfAPlayer: juan in: game equals: 2.
+	self assertNumberOfCardsInTheDeckOfAPlayer: pancho in: game equals: 2.
+	
+	"Juan's turn"
+	game playTurn.
+	self assertCurrentPositionOf: juan in: game equals: 3.
+	self assertCurrentPositionOf: pancho in: game equals: 1.
+	self assertCurrentNumberOfRoundsMadeBy: juan in: game equals: 0.
+	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 0.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 0.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 0.
+	self assertNumberOfCardsInTheDeckOfAPlayer: juan in: game equals: 2.
+	self assertNumberOfCardsInTheDeckOfAPlayer: pancho in: game equals: 2.
+	
+	"Pancho's turn"
+	game playTurn.
+	self assertCurrentPositionOf: juan in: game equals: 3.
+	self assertCurrentPositionOf: pancho in: game equals: 4.
+	self assertCurrentNumberOfRoundsMadeBy: juan in: game equals: 0.
+	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 1.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 0.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 0.
+	self assertNumberOfCardsInTheDeckOfAPlayer: juan in: game equals: 2.
+	self assertNumberOfCardsInTheDeckOfAPlayer: pancho in: game equals: 2.
+	
+	"Juan's turn"
+	game player: juan playsTheCard: Acceleration onTarget: players.
+	game playTurn.
+	self assertCurrentPositionOf: juan in: game equals: 9.
+	self assertCurrentPositionOf: pancho in: game equals: 4.
+	self assertCurrentNumberOfRoundsMadeBy: juan in: game equals: 0.
+	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 1.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 1.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 1.
+	self assertNumberOfCardsInTheDeckOfAPlayer: juan in: game equals: 1.
+	self assertNumberOfCardsInTheDeckOfAPlayer: pancho in: game equals: 2.
+	
+	"Pancho's turn"
+	game player: pancho playsTheCard: Overload onTarget: juan.
+	game playTurn.
+	self assertCurrentPositionOf: juan in: game equals: 9.
+	self assertCurrentPositionOf: pancho in: game equals: 7.
+	self assertCurrentNumberOfRoundsMadeBy: juan in: game equals: 0.
+	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 1.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 2.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 1.
+	self assertNumberOfCardsInTheDeckOfAPlayer: juan in: game equals: 1.
+	self assertNumberOfCardsInTheDeckOfAPlayer: pancho in: game equals: 1.
+	
+	"Juan's turn"
+	game player: juan playsTheCard: Cancellation onTarget: { Overload. juan }.
+	game playTurn.
+	self assertCurrentPositionOf: juan in: game equals: 9.
+	self assertCurrentPositionOf: pancho in: game equals: 7.
+	self assertCurrentNumberOfRoundsMadeBy: juan in: game equals: 1.
+	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 1.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 1.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 1.
+	self assertNumberOfCardsInTheDeckOfAPlayer: juan in: game equals: 0.
+	self assertNumberOfCardsInTheDeckOfAPlayer: pancho in: game equals: 1.
+	
+	"Pancho's turn -> Pancho used the Reversal card, then he steps on a MoonWalk slot so Juan moves forward 2 slots (by the given N in MoonWalk initialization)."
+	game player: pancho playsTheCard: Reversal onTarget: (aBoard slotNumber: 3).
+	game playTurn.
+	self assertCurrentPositionOf: juan in: game equals: 1.
+	self assertCurrentPositionOf: pancho in: game equals: 3.
+	self assertCurrentNumberOfRoundsMadeBy: juan in: game equals: 2.
+	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 2.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 1.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 1.
+	self assertNumberOfCardsInTheDeckOfAPlayer: juan in: game equals: 0.
+	self assertNumberOfCardsInTheDeckOfAPlayer: pancho in: game equals: 0.
+	
+	"Juan's turn -> Juan falls in an AtomicBomb slot"
+	game playTurn.
+	self assertCurrentPositionOf: juan in: game equals: 1.
+	self assertCurrentPositionOf: pancho in: game equals: 1.
+	self assertCurrentNumberOfRoundsMadeBy: juan in: game equals: 2.
+	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 2.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 1.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 1.
+	self assertNumberOfCardsInTheDeckOfAPlayer: juan in: game equals: 0.
+	self assertNumberOfCardsInTheDeckOfAPlayer: pancho in: game equals: 0.
+	
+	"Pancho's turn"
+	game playTurn.
+	self assertCurrentPositionOf: juan in: game equals: 1.
+	self assertCurrentPositionOf: pancho in: game equals: 5.
+	self assertCurrentNumberOfRoundsMadeBy: juan in: game equals: 2.
+	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 3.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 1.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 1.
+	self assertNumberOfCardsInTheDeckOfAPlayer: juan in: game equals: 0.
+	self assertNumberOfCardsInTheDeckOfAPlayer: pancho in: game equals: 0.
 	
 	self assert: game hasWinner equals: true.
 	self assertRankingOf: pancho in: game equals: 1.
@@ -474,6 +694,38 @@ GameTest >> testHappyPathDeterministic [
 GameTest >> testHappyPathNoDeterministic [
 	| game players aDie otherDie builder |
 	players := OrderedCollection with: juan with: pancho.
+	
+	1000 timesRepeat: [ 
+	builder := BoardBuilder forABoardOfSize: 100.
+	builder addEffect: AtomicBomb withOccurrencyOf: 2.
+	builder addEffect: NoEffect withOccurrencyOf: 38.
+	builder addEffect: SpeedUp withOccurrencyOf: 20. 
+	builder addEffect: MoonWalk withOccurrencyOf: 10.
+	builder addEffect: WormHole withOccurrencyOf: 20.
+	builder addEffect: CardGiver withOccurrencyOf: 10.
+	
+	aBoard := builder build.
+	
+	aDie := Die ofASlotDistribution: 6.
+	otherDie := Die ofASlotDistribution: 6.
+	aDice := aDie + otherDie.
+	
+	game := Game
+		playedBy: players
+		thatUse: aDice
+		on: aBoard
+		for: numberOfRoundsToBePlayed
+		withASetOf: cards.
+	
+	game play.
+	self assert: game hasWinner equals: true ]
+]
+
+{ #category : #tests }
+GameTest >> testHappyPathNoDeterministicWithReversalCard [
+	| game players aDie otherDie builder |
+	players := OrderedCollection with: juan with: pancho.
+	cards := { Acceleration. Cancellation. Overload. Redo. Repeat. Speed . Reversal}.
 	
 	1000 timesRepeat: [ 
 	builder := BoardBuilder forABoardOfSize: 100.
@@ -829,41 +1081,7 @@ GameTest >> testOverloadReduceTheTotalRollOfAPlayerByTwoAndDoesntAffectTheOtherP
 ]
 
 { #category : #tests }
-GameTest >> testPlayerCantPlayCancellationBecauseThereAreNotActiveCardsInGame [
-	| game players |
-	players := OrderedCollection with: juan with: pancho.
-	aBoard := Board
-		ofASlotDistribution:
-			{NoEffect createSlot.
-			NoEffect createSlot.
-			CardGiver createSlot.
-			NoEffect createSlot.
-			NoEffect createSlot.
-			NoEffect createSlot.
-			NoEffect createSlot.
-			NoEffect createSlot.
-			NoEffect createSlot.
-			NoEffect createSlot}.
-	game := Game
-		playedBy: players
-		thatUse: aDice
-		on: aBoard
-		for: numberOfRoundsToBePlayed
-		withASetOf: cards.
-	game giveCard: Cancellation createCard toPlayer: juan.
-	self
-		should: [ game
-				player: juan
-				playsTheCard: Cancellation
-				onTarget:
-					{Overload .
-					pancho} ]
-		raise: Error
-		withMessageText: 'There aren`t permanent cards in game'
-]
-
-{ #category : #tests }
-GameTest >> testPlayerCantUseAPermanentCardIfItsNotHisTurn [
+GameTest >> testPlayerCantPlayAPermanentCardIfItsNotHisTurn [
 	| game players |
 	players := OrderedCollection with: juan with: pancho.
 	aBoard := Board
@@ -902,6 +1120,69 @@ GameTest >> testPlayerCantUseAPermanentCardIfItsNotHisTurn [
 ]
 
 { #category : #tests }
+GameTest >> testPlayerCantPlayCancellationBecauseThereAreNotActiveCardsInGame [
+	| game players |
+	players := OrderedCollection with: juan with: pancho.
+	aBoard := Board
+		ofASlotDistribution:
+			{NoEffect createSlot.
+			NoEffect createSlot.
+			CardGiver createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot}.
+	game := Game
+		playedBy: players
+		thatUse: aDice
+		on: aBoard
+		for: numberOfRoundsToBePlayed
+		withASetOf: cards.
+	game giveCard: Cancellation createCard toPlayer: juan.
+	self
+		should: [ game
+				player: juan
+				playsTheCard: Cancellation
+				onTarget:
+					{Overload .
+					pancho} ]
+		raise: Error
+		withMessageText: 'There aren`t permanent cards in game'
+]
+
+{ #category : #tests }
+GameTest >> testPlayerCantPlayReversalCardIfItsNotHisTurn [
+	| game players |
+	players := OrderedCollection with: juan with: pancho.
+	aBoard := Board
+		ofASlotDistribution:
+			{NoEffect createSlot.
+			NoEffect createSlot.
+			SpeedUp createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot}.
+	game := Game
+		playedBy: players
+		thatUse: aDice
+		on: aBoard
+		for: numberOfRoundsToBePlayed
+		withASetOf: cards.
+	game giveCard: Reversal createCard toPlayer: pancho.
+	self
+		should: [ game player: pancho playsTheCard: Reversal onTarget: (aBoard slotNumber: 1) ]
+		raise: Error
+		withMessageText: 'You can`t play that card because it`s not your turn'.
+]
+
+{ #category : #tests }
 GameTest >> testPlayerWinsThanksToASpeedUpEffect [
 	| game players |
 	players := OrderedCollection with: juan with: pancho.
@@ -923,6 +1204,52 @@ GameTest >> testPlayerWinsThanksToASpeedUpEffect [
 		on: aBoard
 		for: numberOfRoundsToBePlayed
 		withASetOf: cards.
+	self assertCurrentPositionOf: juan in: game equals: 1.
+	self assertCurrentPositionOf: pancho in: game equals: 1.
+	self play: 7 turnsIn: game.
+	self assertCurrentPositionOf: juan in: game equals: 9.
+	self assertCurrentNumberOfRoundsMadeBy: juan in: game equals: 1.
+	self assertCurrentPositionOf: pancho in: game equals: 1.
+	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 2.
+	game playTurn.
+	self assertCurrentPositionOf: juan in: game equals: 9.
+	self assertCurrentNumberOfRoundsMadeBy: juan in: game equals: 1.
+	self assertCurrentPositionOf: pancho in: game equals: 4.
+	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 3.
+	self assert: game winner equals: pancho.
+]
+
+{ #category : #tests }
+GameTest >> testPlayerWinsThanksToUsingAReversalCardOnAWormHoleSlot [
+	| game players |
+	players := OrderedCollection with: juan with: pancho.
+	aBoard := Board
+		ofASlotDistribution:
+			{NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			WormHole createSlot}.
+	game := Game
+		playedBy: players
+		thatUse: aDice
+		on: aBoard
+		for: numberOfRoundsToBePlayed
+		withASetOf: cards.
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 0.
+	
+	game giveCard: Reversal createCard toPlayer: juan.
+	game player: juan playsTheCard: Reversal onTarget: (aBoard slotNumber: 10).
+	
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: InvertedState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 1.
+	
 	self assertCurrentPositionOf: juan in: game equals: 1.
 	self assertCurrentPositionOf: pancho in: game equals: 1.
 	self play: 7 turnsIn: game.
@@ -1043,8 +1370,8 @@ GameTest >> testRedoRepeatsTheEffectOfLastCardPlayedThisOneBeingACancellation [
 			{Speed.
 			pancho}.
 	game playTurn.
-	self assert: (game numberOfCardsAffectingPlayer: pancho) equals: 0.
-	self assert: (game numberOfCardsAffectingPlayer: juan) equals: 0.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 0.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 0.
 	self assertCurrentPositionOf: juan in: game equals: 4.
 	self assertCurrentPositionOf: pancho in: game equals: 10.
 	self play: 2 turnsIn: game.
@@ -1078,18 +1405,58 @@ GameTest >> testRedoRepeatsTheEffectOfLastCardPlayedThisOneBeingARepeat [
 	game giveCard: Repeat createCard toPlayer: pancho.
 	game playTurn.
 	game player: pancho playsTheCard: Repeat onTarget: pancho.
-	self assert: (game numberOfCardsAffectingPlayer: pancho) equals: 0.
-	self assert: (game numberOfCardsAffectingPlayer: juan) equals: 0.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 0.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 0.
 	self assertCurrentPositionOf: juan in: game equals: 7.
 	self assertCurrentPositionOf: pancho in: game equals: 5.
 	game player: juan playsTheCard: Redo onTarget: juan.
 	self assertCurrentPositionOf: juan in: game equals: 1.
 	self assertCurrentPositionOf: pancho in: game equals: 5.
 	game playTurn.
-	self assert: (game numberOfCardsAffectingPlayer: pancho) equals: 0.
-	self assert: (game numberOfCardsAffectingPlayer: juan) equals: 0.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 0.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 0.
 	self assertCurrentPositionOf: juan in: game equals: 1.
 	self assertCurrentPositionOf: pancho in: game equals: 4
+]
+
+{ #category : #tests }
+GameTest >> testRedoRepeatsTheEffectOfLastCardPlayedThisOneBeingAReversal [
+	| game players |
+	players := OrderedCollection with: juan with: pancho.
+	aBoard := Board
+		ofASlotDistribution:
+			{NoEffect createSlot.
+			NoEffect createSlot.
+			CardGiver createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			SpeedUp createSlot}.
+	game := Game
+		playedBy: players
+		thatUse: aDice
+		on: aBoard
+		for: numberOfRoundsToBePlayed
+		withASetOf: cards.
+	game giveCard: Redo createCard toPlayer: juan.
+	game giveCard: Reversal createCard toPlayer: pancho.
+	game playTurn.
+	
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 0.
+	
+	game player: pancho playsTheCard: Reversal onTarget: (aBoard slotNumber: 10).
+	
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: InvertedState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 1.
+	
+	game player: juan playsTheCard: Redo onTarget: (aBoard slotNumber: 10).
+	
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 0
 ]
 
 { #category : #tests }
@@ -1120,8 +1487,8 @@ GameTest >> testRedoRepeatsTheEffectOfLastCardPlayedThisOneBeingASpeed [
 	game player: pancho playsTheCard: Speed onTarget: pancho.
 	game player: juan playsTheCard: Redo onTarget: juan.
 	game playTurn.
-	self assert: (game numberOfCardsAffectingPlayer: pancho) equals: 1.
-	self assert: (game numberOfCardsAffectingPlayer: juan) equals: 1.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 1.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 1.
 	self assertCurrentPositionOf: juan in: game equals: 3.
 	self assertCurrentPositionOf: pancho in: game equals: 1.
 	self play: 2 turnsIn: game.
@@ -1160,8 +1527,8 @@ GameTest >> testRedoRepeatsTheEffectOfLastCardPlayedThisOneBeingAnAcceleration [
 		onTarget: players.
 	game player: juan playsTheCard: Redo onTarget: players.
 	game playTurn.
-	self assert: (game numberOfCardsAffectingPlayer: pancho) equals: 2.
-	self assert: (game numberOfCardsAffectingPlayer: juan) equals: 2.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 2.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 2.
 	self assertCurrentPositionOf: juan in: game equals: 3.
 	self assertCurrentPositionOf: pancho in: game equals: 2.
 	self play: 2 turnsIn: game.
@@ -1197,8 +1564,8 @@ GameTest >> testRedoRepeatsTheEffectOfLastCardPlayedThisOneBeingAnOverload [
 	game player: pancho playsTheCard: Overload onTarget: juan.
 	game player: juan playsTheCard: Redo onTarget: pancho.
 	game playTurn.
-	self assert: (game numberOfCardsAffectingPlayer: pancho) equals: 1.
-	self assert: (game numberOfCardsAffectingPlayer: juan) equals: 1.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 1.
+	self assertNumberOfCardsAffectingAPlayer: juan in: game equals: 1.
 	self assertCurrentPositionOf: juan in: game equals: 3.
 	self assertCurrentPositionOf: pancho in: game equals: 8.
 	self play: 2 turnsIn: game.
@@ -1255,9 +1622,9 @@ GameTest >> testRepeatRepeatsTheEffectOfTheLastSlotOfAPlayer [
 		for: numberOfRoundsToBePlayed
 		withASetOf: cards.
 	game giveCard: Repeat createCard toPlayer: pancho.
-	game playTurn.	"mueve juan"
+	game playTurn.	
 	game player: pancho playsTheCard: Repeat onTarget: pancho.
-	self assert: (game numberOfCardsAffectingPlayer: pancho) equals: 0.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 0.
 	self assertCurrentPositionOf: pancho in: game equals: 5.
 	self assertCurrentPositionOf: juan in: game equals: 7
 ]
@@ -1384,7 +1751,7 @@ GameTest >> testRepeatRepeatsTheEffectOfTheLastSlotOfAPlayerThisOneBeingNoEffect
 	game giveCard: Repeat createCard toPlayer: pancho.
 	game playTurn.
 	game player: pancho playsTheCard: Repeat onTarget: pancho.
-	self assert: (game numberOfCardsAffectingPlayer: pancho) equals: 0.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 0.
 	self assertCurrentPositionOf: pancho in: game equals: 1.
 	self assertCurrentPositionOf: juan in: game equals: 3
 ]
@@ -1414,7 +1781,7 @@ GameTest >> testRepeatRepeatsTheEffectOfTheLastSlotOfAPlayerThisOneBeingSpeedUp 
 	game giveCard: Repeat createCard toPlayer: pancho.
 	game playTurn.
 	game player: pancho playsTheCard: Repeat onTarget: pancho.
-	self assert: (game numberOfCardsAffectingPlayer: pancho) equals: 0.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 0.
 	self assertCurrentPositionOf: pancho in: game equals: 5.
 	self assertCurrentPositionOf: juan in: game equals: 7
 ]
@@ -1446,9 +1813,414 @@ GameTest >> testRepeatRepeatsTheEffectOfTheLastSlotOfAPlayerThisOneBeingWormHole
 	game playTurn.
 	game playTurn.
 	game player: pancho playsTheCard: Repeat onTarget: pancho.
-	self assert: (game numberOfCardsAffectingPlayer: pancho) equals: 0.
+	self assertNumberOfCardsAffectingAPlayer: pancho in: game equals: 0.
 	self assertCurrentPositionOf: juan in: game equals: 4.
 	self assertCurrentPositionOf: pancho in: game equals: 6
+]
+
+{ #category : #tests }
+GameTest >> testReversalCardAppliedOnDifferentSlots [
+	| game players |
+	players := OrderedCollection with: juan with: pancho.
+	aBoard := Board
+		ofASlotDistribution:
+			{NoEffect createSlot.
+			SpeedUp createSlot.
+			NoEffect createSlot.
+			(MoonWalk createSlotWithN: 2).
+			NoEffect createSlot.
+			NoEffect createSlot.
+			(MoonWalk createSlotWithN: 7).
+			SpeedUp createSlot.
+			NoEffect createSlot.
+			WormHole createSlot}.
+	game := Game
+		playedBy: players
+		thatUse: aDice
+		on: aBoard
+		for: numberOfRoundsToBePlayed
+		withASetOf: cards.
+	game giveCard: Reversal createCard toPlayer: juan.
+	game giveCard: Reversal createCard toPlayer: juan.
+	game giveCard: Reversal createCard toPlayer: juan.
+	game giveCard: Reversal createCard toPlayer: juan.
+	game giveCard: Reversal createCard toPlayer: juan.
+	
+	self assertStateOfASlot: (aBoard slotNumber: 1) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 1) in: game equals: 0.
+	self assertStateOfASlot: (aBoard slotNumber: 2) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 2) in: game equals: 0.
+	self assertStateOfASlot: (aBoard slotNumber: 4) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 4) in: game equals: 0.
+	self assertStateOfASlot: (aBoard slotNumber: 7) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 7) in: game equals: 0.
+	self assertStateOfASlot: (aBoard slotNumber: 8) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 8) in: game equals: 0.
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 0.
+	
+	game player: juan playsTheCard: Reversal onTarget: (aBoard slotNumber: 2).
+	game player: juan playsTheCard: Reversal onTarget: (aBoard slotNumber: 4).
+	game player: juan playsTheCard: Reversal onTarget: (aBoard slotNumber: 7).
+	game player: juan playsTheCard: Reversal onTarget: (aBoard slotNumber: 8).
+	game player: juan playsTheCard: Reversal onTarget: (aBoard slotNumber: 10).
+	
+	self assertStateOfASlot: (aBoard slotNumber: 1) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 1) in: game equals: 0.
+	self assertStateOfASlot: (aBoard slotNumber: 2) equals: InvertedState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 2) in: game equals: 1.
+	self assertStateOfASlot: (aBoard slotNumber: 4) equals: InvertedState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 4) in: game equals: 1.
+	self assertStateOfASlot: (aBoard slotNumber: 7) equals: InvertedState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 7) in: game equals: 1.
+	self assertStateOfASlot: (aBoard slotNumber: 8) equals: InvertedState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 8) in: game equals: 1.
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: InvertedState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 1.
+]
+
+{ #category : #tests }
+GameTest >> testReversalCardCantChangeAOneStateSlot [
+	| game players |
+	players := OrderedCollection with: juan with: pancho.
+	aBoard := Board
+		ofASlotDistribution:
+			{NoEffect createSlot.
+			AtomicBomb createSlot.
+			CardGiver createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			SpeedUp createSlot.
+			NoEffect createSlot.
+			WormHole createSlot.
+			(MoonWalk createSlotWithN: 2).
+			NoEffect createSlot}.
+	game := Game
+		playedBy: players
+		thatUse: aDice
+		on: aBoard
+		for: numberOfRoundsToBePlayed
+		withASetOf: cards.
+	game giveCard: Reversal createCard toPlayer: juan.
+	game giveCard: Reversal createCard toPlayer: juan.
+	game giveCard: Reversal createCard toPlayer: juan.
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
+	self
+		should: [ game
+				player: juan
+				playsTheCard: Reversal
+				onTarget: (aBoard slotNumber: 1) ]
+		raise: Error
+		withMessageText: 'That slot doesn`t have two states, only NormalState'.
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
+	self
+		assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 1)
+		in: game
+		equals: 0.
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
+	self
+		should: [ game
+				player: juan
+				playsTheCard: Reversal
+				onTarget: (aBoard slotNumber: 2) ]
+		raise: Error
+		withMessageText: 'That slot doesn`t have two states, only NormalState'.
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
+	self
+		assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 2)
+		in: game
+		equals: 0.
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
+	self
+		should: [ game
+				player: juan
+				playsTheCard: Reversal
+				onTarget: (aBoard slotNumber: 3) ]
+		raise: Error
+		withMessageText: 'That slot doesn`t have two states, only NormalState'.
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
+	self
+		assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 3)
+		in: game
+		equals: 0
+]
+
+{ #category : #tests }
+GameTest >> testReversalCardChangeTheStateOfAMoonWalkToInvertedState [
+	| game players |
+	players := OrderedCollection with: juan with: pancho.
+	aBoard := Board
+		ofASlotDistribution:
+			{NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			SpeedUp createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			WormHole createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			(MoonWalk createSlotWithN: 2)}.
+	game := Game
+		playedBy: players
+		thatUse: aDice
+		on: aBoard
+		for: numberOfRoundsToBePlayed
+		withASetOf: cards.
+	game giveCard: Reversal createCard toPlayer: juan.
+	game giveCard: Reversal createCard toPlayer: juan.
+	
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 0.
+	
+	game player: juan playsTheCard: Reversal onTarget: (aBoard slotNumber: 10).
+	
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: InvertedState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 1.
+	
+	self play: 2 turnsIn: game.
+	self assertCurrentPositionOf: pancho in: game equals: 10.
+	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 0.
+	self assertCurrentPositionOf: juan in: game equals: 5.
+	self assertCurrentNumberOfRoundsMadeBy: juan in: game equals: 0
+]
+
+{ #category : #tests }
+GameTest >> testReversalCardChangeTheStateOfAMoonWalkToInvertedStateAndBackToNormalState [
+	| game players |
+	players := OrderedCollection with: juan with: pancho.
+	aBoard := Board
+		ofASlotDistribution:
+			{NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			SpeedUp createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			WormHole createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			(MoonWalk createSlotWithN: 2)}.
+	game := Game
+		playedBy: players
+		thatUse: aDice
+		on: aBoard
+		for: numberOfRoundsToBePlayed
+		withASetOf: cards.
+	game giveCard: Reversal createCard toPlayer: juan.
+	game giveCard: Reversal createCard toPlayer: juan.
+	
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 0.
+	
+	game player: juan playsTheCard: Reversal onTarget: (aBoard slotNumber: 10).
+	
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: InvertedState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 1.
+	
+	game player: juan playsTheCard: Reversal onTarget: (aBoard slotNumber: 10).
+	
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 0
+]
+
+{ #category : #tests }
+GameTest >> testReversalCardChangeTheStateOfASpeedUpToInvertedState [
+	| game players |
+	players := OrderedCollection with: juan with: pancho.
+	aBoard := Board
+		ofASlotDistribution:
+			{NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			(MoonWalk createSlotWithN: 2).
+			NoEffect createSlot.
+			WormHole createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			SpeedUp createSlot}.
+	game := Game
+		playedBy: players
+		thatUse: aDice
+		on: aBoard
+		for: numberOfRoundsToBePlayed
+		withASetOf: cards.
+	game giveCard: Reversal createCard toPlayer: juan.
+	
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 0.
+	
+	game player: juan playsTheCard: Reversal onTarget: (aBoard slotNumber: 10).
+	
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: InvertedState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 1.
+	
+	self play: 2 turnsIn: game.
+	self assertCurrentPositionOf: pancho in: game equals: 6.
+	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 0
+]
+
+{ #category : #tests }
+GameTest >> testReversalCardChangeTheStateOfASpeedUpToInvertedStateAndBackToNormalState [
+	| game players |
+	players := OrderedCollection with: juan with: pancho.
+	aBoard := Board
+		ofASlotDistribution:
+			{NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			(MoonWalk createSlotWithN: 2).
+			NoEffect createSlot.
+			WormHole createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			SpeedUp createSlot}.
+	game := Game
+		playedBy: players
+		thatUse: aDice
+		on: aBoard
+		for: numberOfRoundsToBePlayed
+		withASetOf: cards.
+	game giveCard: Reversal createCard toPlayer: juan.
+	game giveCard: Reversal createCard toPlayer: juan.
+	
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 0.
+	
+	game player: juan playsTheCard: Reversal onTarget: (aBoard slotNumber: 10).
+	
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: InvertedState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 1.
+	
+	game player: juan playsTheCard: Reversal onTarget: (aBoard slotNumber: 10).
+	
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 0
+]
+
+{ #category : #tests }
+GameTest >> testReversalCardChangeTheStateOfAWormHoleToInvertedState [
+	| game players |
+	players := OrderedCollection with: juan with: pancho.
+	aBoard := Board
+		ofASlotDistribution:
+			{NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			(MoonWalk createSlotWithN: 2).
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			SpeedUp createSlot.
+			NoEffect createSlot.
+			WormHole createSlot}.
+	game := Game
+		playedBy: players
+		thatUse: aDice
+		on: aBoard
+		for: numberOfRoundsToBePlayed
+		withASetOf: cards.
+	game giveCard: Reversal createCard toPlayer: juan.
+	game giveCard: Reversal createCard toPlayer: juan.
+	
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 0.
+	
+	game player: juan playsTheCard: Reversal onTarget: (aBoard slotNumber: 10).
+	
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: InvertedState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 1.
+	
+	self play: 2 turnsIn: game.
+	self assertCurrentPositionOf: pancho in: game equals: 4.
+	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 1
+]
+
+{ #category : #tests }
+GameTest >> testReversalCardChangeTheStateOfAWormHoleToInvertedStateAndBackToNormalState [
+	| game players |
+	players := OrderedCollection with: juan with: pancho.
+	aBoard := Board
+		ofASlotDistribution:
+			{NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			(MoonWalk createSlotWithN: 2).
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			SpeedUp createSlot.
+			NoEffect createSlot.
+			WormHole createSlot}.
+	game := Game
+		playedBy: players
+		thatUse: aDice
+		on: aBoard
+		for: numberOfRoundsToBePlayed
+		withASetOf: cards.
+	game giveCard: Reversal createCard toPlayer: juan.
+	game giveCard: Reversal createCard toPlayer: juan.
+	
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 0.
+	
+	game player: juan playsTheCard: Reversal onTarget: (aBoard slotNumber: 10).
+	
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: InvertedState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 1.
+	
+	game player: juan playsTheCard: Reversal onTarget: (aBoard slotNumber: 10).
+	
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 0
+]
+
+{ #category : #tests }
+GameTest >> testReversalCardOnlyChangeTheStateOfTheSelectedSlot [
+	| game players |
+	players := OrderedCollection with: juan with: pancho.
+	aBoard := Board
+		ofASlotDistribution:
+			{NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			(MoonWalk createSlotWithN: 2).
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			SpeedUp createSlot.
+			NoEffect createSlot.
+			WormHole createSlot}.
+	game := Game
+		playedBy: players
+		thatUse: aDice
+		on: aBoard
+		for: numberOfRoundsToBePlayed
+		withASetOf: cards.
+	game giveCard: Reversal createCard toPlayer: juan.
+	game giveCard: Reversal createCard toPlayer: juan.
+	
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 0.
+	self assertStateOfASlot: (aBoard slotNumber: 1) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 1) in: game equals: 0.
+	self assertStateOfASlot: (aBoard slotNumber: 4) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 4) in: game equals: 0.
+	self assertStateOfASlot: (aBoard slotNumber: 8) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 8) in: game equals: 0.
+	
+	game player: juan playsTheCard: Reversal onTarget: (aBoard slotNumber: 10).
+	
+	self assertStateOfASlot: (aBoard slotNumber: 10) equals: InvertedState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 1.
+	self assertStateOfASlot: (aBoard slotNumber: 1) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 1) in: game equals: 0.
+	self assertStateOfASlot: (aBoard slotNumber: 4) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 4) in: game equals: 0.
+	self assertStateOfASlot: (aBoard slotNumber: 8) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 8) in: game equals: 0
 ]
 
 { #category : #tests }
@@ -1608,6 +2380,96 @@ GameTest >> testSpeedUpEffectMakesPlayerMoveForwardFourSlots [
 ]
 
 { #category : #tests }
+GameTest >> testUsingAReversalCardOnASpeedUpNowTheEffectChangesRoundsMadeIfNecessary [
+	| game players |
+	players := OrderedCollection with: juan with: pancho.
+	aBoard := Board
+		ofASlotDistribution:
+			{NoEffect createSlot.
+			SpeedUp createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot}.
+	game := Game
+		playedBy: players
+		thatUse: aDice
+		on: aBoard
+		for: numberOfRoundsToBePlayed
+		withASetOf: cards.
+	self assertStateOfASlot: (aBoard slotNumber: 2) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 2) in: game equals: 0.
+	
+	game giveCard: Reversal createCard toPlayer: juan.
+	game player: juan playsTheCard: Reversal onTarget: (aBoard slotNumber: 2).
+	
+	self assertStateOfASlot: (aBoard slotNumber: 2) equals: InvertedState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 2) in: game equals: 1.
+	
+	self assertCurrentPositionOf: juan in: game equals: 1.
+	self assertCurrentPositionOf: pancho in: game equals: 1.
+	self play: 3 turnsIn: game.
+	self assertCurrentPositionOf: juan in: game equals: 8.
+	self assertCurrentNumberOfRoundsMadeBy: juan in: game equals: 0.
+	self assertCurrentPositionOf: pancho in: game equals: 10.
+	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 0.
+	game playTurn.
+	self assertCurrentPositionOf: juan in: game equals: 8.
+	self assertCurrentNumberOfRoundsMadeBy: juan in: game equals: 0.
+	self assertCurrentPositionOf: pancho in: game equals: 8.
+	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 0
+]
+
+{ #category : #tests }
+GameTest >> testUsingAReversalCardOnMoonWalkNowTheEffectChangesRoundsMadeIfNecessary [
+	| game players |
+	players := OrderedCollection with: juan with: pancho.
+	aBoard := Board
+		ofASlotDistribution:
+			{NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			MoonWalk createSlotWithN: 10.
+			NoEffect createSlot.
+			NoEffect createSlot.
+			NoEffect createSlot}.
+	game := Game
+		playedBy: players
+		thatUse: aDice
+		on: aBoard
+		for: numberOfRoundsToBePlayed
+		withASetOf: cards.
+	self assertStateOfASlot: (aBoard slotNumber: 7) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 7) in: game equals: 0.
+	
+	game giveCard: Reversal createCard toPlayer: juan.
+	game player: juan playsTheCard: Reversal onTarget: (aBoard slotNumber: 7).
+	
+	self assertStateOfASlot: (aBoard slotNumber: 7) equals: InvertedState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 7) in: game equals: 1.
+	
+	self assertCurrentPositionOf: juan in: game equals: 1.
+	self assertCurrentPositionOf: pancho in: game equals: 1.
+	self play: 4 turnsIn: game.
+	self assertCurrentPositionOf: juan in: game equals: 8.
+	self assertCurrentNumberOfRoundsMadeBy: juan in: game equals: 0.
+	self assertCurrentPositionOf: pancho in: game equals: 2.
+	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 1.
+	game playTurn.
+	self assertCurrentPositionOf: juan in: game equals: 7.
+	self assertCurrentNumberOfRoundsMadeBy: juan in: game equals: 1.
+	self assertCurrentPositionOf: pancho in: game equals: 2.
+	self assertCurrentNumberOfRoundsMadeBy: pancho in: game equals: 2
+]
+
+{ #category : #tests }
 GameTest >> testValidationOfTheTargetThatTheCardsReceive [
 	| game players |
 	players := OrderedCollection with: juan with: pancho.
@@ -1622,7 +2484,7 @@ GameTest >> testValidationOfTheTargetThatTheCardsReceive [
 			NoEffect createSlot.
 			NoEffect createSlot.
 			NoEffect createSlot.
-			NoEffect createSlot}.
+			SpeedUp createSlot}.
 	game := Game
 		playedBy: players
 		thatUse: aDice
@@ -1634,6 +2496,8 @@ GameTest >> testValidationOfTheTargetThatTheCardsReceive [
 	game giveCard: Overload createCard toPlayer: juan.
 	game giveCard: Cancellation createCard toPlayer: pancho.
 	game giveCard: Repeat createCard toPlayer: juan.
+	game giveCard: Reversal createCard toPlayer: pancho.
+	
 	self
 		should: [ game
 				player: juan
@@ -1658,13 +2522,19 @@ GameTest >> testValidationOfTheTargetThatTheCardsReceive [
 		should:
 			[ game player: pancho playsTheCard: Cancellation onTarget: juan ]
 		raise: Error
-		withMessageText: 'The card Cancellation must receive a collection with a Card and a player as a target'.
+		withMessageText: 'The card Cancellation must receive a collection with a Card and a player/slot as a target'.
 	game playTurn.
 	self
 		should: [ game player: juan playsTheCard: Repeat onTarget: Overload ]
 		raise: Error
 		withMessageText:
-			'The card Repeat must receive a player as a target'
+			'The card Repeat must receive a player as a target'.
+	game playTurn.
+	self
+		should: [ game player: pancho playsTheCard: Reversal onTarget: juan ]
+		raise: Error
+		withMessageText:
+			'The card Reversal must receive a slot as a target'.
 ]
 
 { #category : #tests }

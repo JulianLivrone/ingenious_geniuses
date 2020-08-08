@@ -32,7 +32,7 @@ Board >> initializeWith: aSlotsArray [
 	slotsList := aSlotsArray
 ]
 
-{ #category : #accesing }
+{ #category : #accessing }
 Board >> lastSlot [
 	^ lastSlot
 ]
@@ -40,6 +40,11 @@ Board >> lastSlot [
 { #category : #accessing }
 Board >> numberOfSlots [
 	^ numberOfSlots
+]
+
+{ #category : #accessing }
+Board >> slotNumber: aNumber [
+	^ slotsList at: aNumber
 ]
 
 { #category : #accessing }

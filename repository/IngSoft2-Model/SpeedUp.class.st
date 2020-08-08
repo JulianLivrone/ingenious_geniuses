@@ -9,5 +9,11 @@ Class {
 
 { #category : #playing }
 SpeedUp >> applyEffectTo: aPlayer from: game [
-	game move: aPlayer ANumberOfSlotsEqualTo: 4
+	state applySpeedUpEffectTo: aPlayer from: game
+]
+
+{ #category : #initialization }
+SpeedUp >> initializeSlot [
+	state := NormalState new.
+	twoStates := true.
 ]

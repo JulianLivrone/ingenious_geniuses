@@ -22,10 +22,12 @@ MoonWalk class >> createSlotWithN: aNumber [
 
 { #category : #playing }
 MoonWalk >> applyEffectTo: aPlayer from: game [
-	game moveEveryPlayerButThePlayer: aPlayer aNumberOfSlotsEqualTo: n.
+	state applyMoonWalkEffectTo: aPlayer from: game withN: n
 ]
 
 { #category : #initialization }
 MoonWalk >> initializeWithN: anNumber [
 	n := anNumber.
+	state := NormalState new.
+	twoStates := true.
 ]

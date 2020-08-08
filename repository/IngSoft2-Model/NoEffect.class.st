@@ -9,5 +9,5 @@ Class {
 
 { #category : #playing }
 NoEffect >> applyEffectTo: aPlayer from: game [
-	
+	state applyNoEffectEffectTo: aPlayer from: game
 ]

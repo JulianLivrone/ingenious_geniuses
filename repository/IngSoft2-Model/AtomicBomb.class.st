@@ -9,5 +9,5 @@ Class {
 
 { #category : #playing }
 AtomicBomb >> applyEffectTo: aPlayer from: game [
-	game moveEveryPlayerToSlotOne.
+	state applyAtomicBombEffectTo: aPlayer from: game
 ]

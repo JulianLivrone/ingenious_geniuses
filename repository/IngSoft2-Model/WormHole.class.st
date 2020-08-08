@@ -9,5 +9,11 @@ Class {
 
 { #category : #playing }
 WormHole >> applyEffectTo: aPlayer from: game [
-	game move: aPlayer ANumberOfSlotsEqualTo: -4
+	state applyWormHoleEffectTo: aPlayer from:game 
+]
+
+{ #category : #initialization }
+WormHole >> initializeSlot [
+	state := NormalState new.
+	twoStates := true.
 ]

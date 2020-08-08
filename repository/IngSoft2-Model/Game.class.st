@@ -51,7 +51,7 @@ Game >> applyEffectOfTheSlotAtThePositionOfCurrentPlayer [
 Game >> calculateTotalRollOfPlayer: player [
 	| diceRoll slotsConsecuenceOfTheCardsInGame |
 	diceRoll := dice roll.
-	slotsConsecuenceOfTheCardsInGame := managerOfCardsActive totalEffectOver: player.
+	slotsConsecuenceOfTheCardsInGame := managerOfCardsActive totalEffectOverAPlayer: player.
 	^ diceRoll + slotsConsecuenceOfTheCardsInGame
 ]
 
@@ -96,8 +96,13 @@ Game >> initializeWith: allThePlayers with: aDice and: aBoard until: aNumberOfRo
 	numberOfTurnsPlayed := 0.
 	roundsForTheGameToBeOver := aNumberOfRounds.
 	leaderBoard := LeaderBoard with: players.
-	deckHandler := DeckHandler ofPlayers: players withTheFollowingTypeOfCards: cards andGenerator: (SequentialNaturalNumberProvider providing: #(1 2 3 4 5 6)).
-	managerOfCardsActive := ManagerOfTheCardsActiveInGame createFor: players.
+	deckHandler := DeckHandler
+		ofPlayers: players
+		withTheFollowingTypeOfCards: cards
+		andGenerator: (SequentialNaturalNumberProvider providing: #(1 2 3 4 5 6)).
+	managerOfCardsActive := ManagerOfTheCardsActiveInGame
+		createFor: players
+		and: (board slotsList)
 ]
 
 { #category : #accessing }
@@ -129,8 +134,13 @@ Game >> moveEveryPlayerToSlotOne [
 ]
 
 { #category : #calculations }
-Game >> numberOfCardsAffectingPlayer: aPlayer [ 
-	^ managerOfCardsActive numberOfCardsAffectingPlayer: aPlayer
+Game >> numberOfCardsAffectingAPlayer: aPlayer [ 
+	^ managerOfCardsActive numberOfCardsAffectingAPlayer: aPlayer
+]
+
+{ #category : #calculations }
+Game >> numberOfCardsAffectingASlot: aSlot [
+	^ managerOfCardsActive numberOfCardsAffectingASlot: aSlot
 ]
 
 { #category : #calculations }

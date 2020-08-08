@@ -9,5 +9,5 @@ Class {
 
 { #category : #playing }
 CardGiver >> applyEffectTo: aPlayer from: game [
-	game giveRandomCardToPlayer: aPlayer.
+	state applyCardGiverEffectTo: aPlayer from: game.
 ]
