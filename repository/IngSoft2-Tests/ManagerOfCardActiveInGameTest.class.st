@@ -9,6 +9,21 @@ Class {
 	#category : #'IngSoft2-Tests'
 }
 
+{ #category : #asserting }
+ManagerOfCardActiveInGameTest >> assertNumberOfCardsAffectingAPlayer: aPlayer inTheManagerOfCardsActiveInGame: aManagerOfCardsActiveInGame equals: aNumber [
+	self assert: (aManagerOfCardsActiveInGame numberOfCardsAffectingAPlayer: aPlayer) equals: aNumber.
+]
+
+{ #category : #asserting }
+ManagerOfCardActiveInGameTest >> assertNumberOfCardsAffectingASlot: aSlot inTheManagerOfCardsActiveInGame: aManagerOfCardsActiveInGame equals: aNumber [
+	self assert: (aManagerOfCardsActiveInGame numberOfCardsAffectingASlot: (aBoard slotNumber: 1)) equals: aNumber.
+]
+
+{ #category : #asserting }
+ManagerOfCardActiveInGameTest >> assertTotalEffectOverAPlayer: aPlayer inTheManagerOfCardsActiveInGame: aManagerOfCardsActiveInGame equals: aNumber [
+	self assert: (aManagerOfCardsActiveInGame totalEffectOverAPlayer: aPlayer) equals: aNumber.
+]
+
 { #category : #running }
 ManagerOfCardActiveInGameTest >> setUp [
 	juan := 'juan'.
@@ -24,12 +39,8 @@ ManagerOfCardActiveInGameTest >> testAllManagersOfCardsOverAPlayerInitializeEmpt
 	managerOfCardsActiveInGame := ManagerOfTheCardsActiveInGame
 		createFor: setOfPlayers
 		and: (aBoard slotsList).
-	self
-		assert: (managerOfCardsActiveInGame numberOfCardsAffectingAPlayer: juan)
-		equals: 0.
-	self
-		assert: (managerOfCardsActiveInGame numberOfCardsAffectingAPlayer: pancho)
-		equals: 0
+	self assertNumberOfCardsAffectingAPlayer: juan inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 0.
+	self assertNumberOfCardsAffectingAPlayer: pancho inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 0.
 ]
 
 { #category : #tests }
@@ -40,56 +51,28 @@ ManagerOfCardActiveInGameTest >> testAllManagersOfCardsOverASlotInitializeEmpty 
 	managerOfCardsActiveInGame := ManagerOfTheCardsActiveInGame
 		createFor: setOfPlayers
 		and: (aBoard slotsList).
-	self
-		assert: (managerOfCardsActiveInGame numberOfCardsAffectingASlot: (aBoard slotNumber: 1))
-		equals: 0.
-			self
-		assert: (managerOfCardsActiveInGame numberOfCardsAffectingASlot: (aBoard slotNumber: 2))
-		equals: 0.
-			self
-		assert: (managerOfCardsActiveInGame numberOfCardsAffectingASlot: (aBoard slotNumber: 3))
-		equals: 0.
-			self
-		assert: (managerOfCardsActiveInGame numberOfCardsAffectingASlot: (aBoard slotNumber: 4))
-		equals: 0.
-			self
-		assert: (managerOfCardsActiveInGame numberOfCardsAffectingASlot: (aBoard slotNumber: 5))
-		equals: 0.
-			self
-		assert: (managerOfCardsActiveInGame numberOfCardsAffectingASlot: (aBoard slotNumber: 6))
-		equals: 0.
-			self
-		assert: (managerOfCardsActiveInGame numberOfCardsAffectingASlot: (aBoard slotNumber: 7))
-		equals: 0.
-			self
-		assert: (managerOfCardsActiveInGame numberOfCardsAffectingASlot: (aBoard slotNumber: 8))
-		equals: 0.
-			self
-		assert: (managerOfCardsActiveInGame numberOfCardsAffectingASlot: (aBoard slotNumber: 9))
-		equals: 0.
-			self
-		assert: (managerOfCardsActiveInGame numberOfCardsAffectingASlot: (aBoard slotNumber: 10))
-		equals: 0.
-		
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 1) inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 0.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 2) inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 0.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 3) inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 0.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 4) inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 0.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 5) inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 0.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 6) inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 0.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 7) inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 0.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 8) inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 0.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 9) inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 0.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 0.
 ]
 
 { #category : #tests }
 ManagerOfCardActiveInGameTest >> testCantRemoveACardThatIsNotActiveOverAPlayer [
 	| setOfPlayers managerOfCardsActiveInGame aCard |
-	setOfPlayers := {juan.
-	pancho}.
-	managerOfCardsActiveInGame := ManagerOfTheCardsActiveInGame
-		createFor: setOfPlayers
-		and: (aBoard slotsList).
-	self
-		assert: (managerOfCardsActiveInGame numberOfCardsAffectingAPlayer: juan)
-		equals: 0.
+	setOfPlayers := {juan.pancho}.
+	managerOfCardsActiveInGame := ManagerOfTheCardsActiveInGame createFor: setOfPlayers and: (aBoard slotsList).
+	self assertNumberOfCardsAffectingAPlayer: juan inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 0.
 	aCard := Overload createCard.
 	managerOfCardsActiveInGame addCard: aCard toPlayer: juan.
 	managerOfCardsActiveInGame addCard: aCard toPlayer: juan.
-	self
-		assert: (managerOfCardsActiveInGame numberOfCardsAffectingAPlayer: juan)
-		equals: 2.
+	self assertNumberOfCardsAffectingAPlayer: juan inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 2.
 	aCard := Speed createCard.
 	self
 		should: [ managerOfCardsActiveInGame removeCard: aCard fromPlayer: juan ]
@@ -113,12 +96,8 @@ ManagerOfCardActiveInGameTest >> testDifferentCardsAffectAPlayer [
 	managerOfCardsActiveInGame addCard: aCard toPlayer: juan.
 	aCard := Acceleration createCard.
 	managerOfCardsActiveInGame addCardToAllPlayers: aCard.
-	self
-		assert: (managerOfCardsActiveInGame numberOfCardsAffectingAPlayer: juan)
-		equals: 4.
-	self
-		assert: (managerOfCardsActiveInGame numberOfCardsAffectingAPlayer: pancho)
-		equals: 1
+	self assertNumberOfCardsAffectingAPlayer: juan inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 4.
+	self assertNumberOfCardsAffectingAPlayer: pancho inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 1.
 ]
 
 { #category : #tests }
@@ -129,19 +108,11 @@ ManagerOfCardActiveInGameTest >> testManagerOfEffectsOfTheCardsInGameRemovesAnAc
 	managerOfCardsActiveInGame := ManagerOfTheCardsActiveInGame
 		createFor: setOfPlayers
 		and: (aBoard slotsList).
-	self
-		assert: (managerOfCardsActiveInGame numberOfCardsAffectingAPlayer: juan)
-		equals: 0.
+	self assertNumberOfCardsAffectingAPlayer: juan inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 0.
 	aCard := Overload createCard.
 	managerOfCardsActiveInGame addCard: aCard toPlayer: juan.
 	managerOfCardsActiveInGame addCard: aCard toPlayer: juan.
-	self
-		assert: (managerOfCardsActiveInGame numberOfCardsAffectingAPlayer: juan)
-		equals: 2.
-	managerOfCardsActiveInGame removeCard: Overload fromPlayer: juan.
-	self
-		assert: (managerOfCardsActiveInGame numberOfCardsAffectingAPlayer: juan)
-		equals: 1
+	self assertNumberOfCardsAffectingAPlayer: juan inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 2.
 ]
 
 { #category : #tests }
@@ -151,9 +122,9 @@ ManagerOfCardActiveInGameTest >> testReversalCardAffectsASlot [
 	managerOfCardsActiveInGame := ManagerOfTheCardsActiveInGame createFor: setOfPlayers and: (aBoard slotsList).
 	aCard := Reversal createCard.
 	
-	self assert: (managerOfCardsActiveInGame numberOfCardsAffectingASlot: (aBoard slotNumber: 1)) equals: 0.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 1) inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 0.
 	managerOfCardsActiveInGame addCard: aCard toSlot: (aBoard slotNumber: 1).
-	self assert: (managerOfCardsActiveInGame numberOfCardsAffectingASlot: (aBoard slotNumber: 1)) equals: 1.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 1) inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 1.
 ]
 
 { #category : #tests }
@@ -172,12 +143,8 @@ ManagerOfCardActiveInGameTest >> testSomeCardsAffectEachPlayer [
 	managerOfCardsActiveInGame addCard: aCard toPlayer: pancho.
 	aCard := Acceleration createCard.
 	managerOfCardsActiveInGame addCardToAllPlayers: aCard.
-	self
-		assert: (managerOfCardsActiveInGame numberOfCardsAffectingAPlayer: juan)
-		equals: 3.
-	self
-		assert: (managerOfCardsActiveInGame numberOfCardsAffectingAPlayer: pancho)
-		equals: 2
+	self assertNumberOfCardsAffectingAPlayer: juan inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 3.
+	self assertNumberOfCardsAffectingAPlayer: pancho inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 2.
 ]
 
 { #category : #tests }
@@ -211,39 +178,23 @@ ManagerOfCardActiveInGameTest >> testTotalEffectOverAPlayerCanBeNegativePositivo
 	managerOfCardsActiveInGame := ManagerOfTheCardsActiveInGame
 		createFor: setOfPlayers
 		and: (aBoard slotsList).
-	self
-		assert: (managerOfCardsActiveInGame totalEffectOverAPlayer: juan)
-		equals: 0.
-	self
-		assert: (managerOfCardsActiveInGame totalEffectOverAPlayer: pancho)
-		equals: 0.
+	self assertTotalEffectOverAPlayer: juan inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 0.
+	self assertTotalEffectOverAPlayer: pancho inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 0.
 	aCard := Speed createCard.
 	managerOfCardsActiveInGame addCard: aCard toPlayer: juan.
-	self
-		assert: (managerOfCardsActiveInGame totalEffectOverAPlayer: juan)
-		equals: 1.
-	self
-		assert: (managerOfCardsActiveInGame totalEffectOverAPlayer: pancho)
-		equals: 0.
+	self assertTotalEffectOverAPlayer: juan inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 1.
+	self assertTotalEffectOverAPlayer: pancho inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 0.
 	managerOfCardsActiveInGame addCard: aCard toPlayer: juan.
 	aCard := Acceleration createCard.
 	managerOfCardsActiveInGame addCardToAllPlayers: aCard.
 	aCard := Overload createCard.
 	managerOfCardsActiveInGame addCard: aCard toPlayer: pancho.
 	managerOfCardsActiveInGame addCard: aCard toPlayer: pancho.
-	self
-		assert: (managerOfCardsActiveInGame totalEffectOverAPlayer: juan)
-		equals: 3.
-	self
-		assert: (managerOfCardsActiveInGame totalEffectOverAPlayer: pancho)
-		equals: -3.
+	self assertTotalEffectOverAPlayer: juan inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 3.
+	self assertTotalEffectOverAPlayer: pancho inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: -3.
 	managerOfCardsActiveInGame addCard: aCard toPlayer: juan.
-	self
-		assert: (managerOfCardsActiveInGame totalEffectOverAPlayer: juan)
-		equals: 1.
-	self
-		assert: (managerOfCardsActiveInGame totalEffectOverAPlayer: pancho)
-		equals: -3
+	self assertTotalEffectOverAPlayer: juan inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 1.
+	self assertTotalEffectOverAPlayer: pancho inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: -3.
 ]
 
 { #category : #tests }
@@ -254,26 +205,18 @@ ManagerOfCardActiveInGameTest >> testTotalEffectOverAPlayerIsTheSumOfEveryEffect
 	managerOfCardsActiveInGame := ManagerOfTheCardsActiveInGame
 		createFor: setOfPlayers
 		and: (aBoard slotsList).
-	self
-		assert: (managerOfCardsActiveInGame totalEffectOverAPlayer: juan)
-		equals: 0.
+	self assertTotalEffectOverAPlayer: juan inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 0.
 	aCard := Speed createCard.
 	managerOfCardsActiveInGame addCard: aCard toPlayer: juan.
-	self
-		assert: (managerOfCardsActiveInGame totalEffectOverAPlayer: juan)
-		equals: 1.
+	self assertTotalEffectOverAPlayer: juan inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 1.
 	aCard := Speed createCard.
 	managerOfCardsActiveInGame addCard: aCard toPlayer: juan.
 	aCard := Acceleration createCard.
 	managerOfCardsActiveInGame addCardToAllPlayers: aCard.
-	self
-		assert: (managerOfCardsActiveInGame totalEffectOverAPlayer: juan)
-		equals: 3.
+	self assertTotalEffectOverAPlayer: juan inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 3.
 	aCard := Overload createCard.
 	managerOfCardsActiveInGame addCard: aCard toPlayer: juan.
-	self
-		assert: (managerOfCardsActiveInGame totalEffectOverAPlayer: juan)
-		equals: 1
+	self assertTotalEffectOverAPlayer: juan inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 1.
 ]
 
 { #category : #tests }
@@ -284,30 +227,18 @@ ManagerOfCardActiveInGameTest >> testTotalEffectOverDifferentPlayers [
 	managerOfCardsActiveInGame := ManagerOfTheCardsActiveInGame
 		createFor: setOfPlayers
 		and: (aBoard slotsList).
-	self
-		assert: (managerOfCardsActiveInGame totalEffectOverAPlayer: juan)
-		equals: 0.
-	self
-		assert: (managerOfCardsActiveInGame totalEffectOverAPlayer: pancho)
-		equals: 0.
+	self assertTotalEffectOverAPlayer: juan inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 0.
+	self assertTotalEffectOverAPlayer: pancho inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 0.
 	aCard := Speed createCard.
 	managerOfCardsActiveInGame addCard: aCard toPlayer: juan.
-	self
-		assert: (managerOfCardsActiveInGame totalEffectOverAPlayer: juan)
-		equals: 1.
-	self
-		assert: (managerOfCardsActiveInGame totalEffectOverAPlayer: pancho)
-		equals: 0.
+	self assertTotalEffectOverAPlayer: juan inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 1.
+	self assertTotalEffectOverAPlayer: pancho inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 0.
 	aCard := Overload createCard.
 	managerOfCardsActiveInGame addCard: aCard toPlayer: juan.
 	aCard := Acceleration createCard.
 	managerOfCardsActiveInGame addCardToAllPlayers: aCard.
-	self
-		assert: (managerOfCardsActiveInGame totalEffectOverAPlayer: juan)
-		equals: 0.
-	self
-		assert: (managerOfCardsActiveInGame totalEffectOverAPlayer: pancho)
-		equals: 1
+	self assertTotalEffectOverAPlayer: juan inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 0.
+	self assertTotalEffectOverAPlayer: pancho inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 1.
 ]
 
 { #category : #tests }
@@ -317,11 +248,11 @@ ManagerOfCardActiveInGameTest >> testTwoReversalCardsDenyEachOther [
 	managerOfCardsActiveInGame := ManagerOfTheCardsActiveInGame createFor: setOfPlayers and: (aBoard slotsList).
 	aCard := Reversal createCard.
 	
-	self assert: (managerOfCardsActiveInGame numberOfCardsAffectingASlot: (aBoard slotNumber: 1)) equals: 0.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 1) inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 0.
 	managerOfCardsActiveInGame addCard: aCard toSlot: (aBoard slotNumber: 1).
-	self assert: (managerOfCardsActiveInGame numberOfCardsAffectingASlot: (aBoard slotNumber: 1)) equals: 1.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 1) inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 1.
 	managerOfCardsActiveInGame addCard: aCard toSlot: (aBoard slotNumber: 1).
-	self assert: (managerOfCardsActiveInGame numberOfCardsAffectingASlot: (aBoard slotNumber: 1)) equals: 0.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 1) inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 0.
 ]
 
 { #category : #tests }
@@ -335,10 +266,6 @@ ManagerOfCardActiveInGameTest >> testTwoSameCardsAffectAPlayer [
 	aCard := Overload createCard.
 	managerOfCardsActiveInGame addCard: aCard toPlayer: juan.
 	managerOfCardsActiveInGame addCard: aCard toPlayer: juan.
-	self
-		assert: (managerOfCardsActiveInGame numberOfCardsAffectingAPlayer: juan)
-		equals: 2.
-	self
-		assert: (managerOfCardsActiveInGame numberOfCardsAffectingAPlayer: pancho)
-		equals: 0
+	self assertNumberOfCardsAffectingAPlayer: juan inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 2.
+	self assertNumberOfCardsAffectingAPlayer: pancho inTheManagerOfCardsActiveInGame: managerOfCardsActiveInGame equals: 0.
 ]

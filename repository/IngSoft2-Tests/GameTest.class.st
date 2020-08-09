@@ -909,7 +909,7 @@ GameTest >> testOverloadCanMakeAPlayerMoveBackwardsAndChangeTheNumberOfRoundsMad
 	game player: juan playsTheCard: Overload onTarget: pancho.
 	game player: juan playsTheCard: Overload onTarget: pancho.
 	self play: 2 turnsIn: game.
-
+	
 	self assertCurrentPositionOf: juan in: game equals: 7.
 	self assertCurrentNumberOfRoundsMadeBy: juan in: game equals: 1. 
 	self assertCurrentPositionOf: pancho in: game equals: 9.
@@ -1905,44 +1905,19 @@ GameTest >> testReversalCardCantChangeAOneStateSlot [
 	game giveCard: Reversal createCard toPlayer: juan.
 	game giveCard: Reversal createCard toPlayer: juan.
 	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
-	self
-		should: [ game
-				player: juan
-				playsTheCard: Reversal
-				onTarget: (aBoard slotNumber: 1) ]
-		raise: Error
-		withMessageText: 'That slot doesn`t have two states, only NormalState'.
+	self should: [ game player: juan playsTheCard: Reversal onTarget: (aBoard slotNumber: 1) ] raise: Error withMessageText: 'That slot doesn`t have two states, only NormalState'.
 	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
-	self
-		assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 1)
-		in: game
-		equals: 0.
-	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
-	self
-		should: [ game
-				player: juan
-				playsTheCard: Reversal
-				onTarget: (aBoard slotNumber: 2) ]
-		raise: Error
-		withMessageText: 'That slot doesn`t have two states, only NormalState'.
-	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
-	self
-		assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 2)
-		in: game
-		equals: 0.
-	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
-	self
-		should: [ game
-				player: juan
-				playsTheCard: Reversal
-				onTarget: (aBoard slotNumber: 3) ]
-		raise: Error
-		withMessageText: 'That slot doesn`t have two states, only NormalState'.
-	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
-	self
-		assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 3)
-		in: game
-		equals: 0
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 10) in: game equals: 0.
+	
+	self assertStateOfASlot: (aBoard slotNumber: 2) equals: NormalState.
+	self should: [ game player: juan playsTheCard: Reversal onTarget: (aBoard slotNumber: 2) ] raise: Error withMessageText: 'That slot doesn`t have two states, only NormalState'.
+	self assertStateOfASlot: (aBoard slotNumber: 2) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 2) in: game equals: 0.
+	
+	self assertStateOfASlot: (aBoard slotNumber: 3) equals: NormalState.
+	self should: [ game player: juan playsTheCard: Reversal onTarget: (aBoard slotNumber: 3) ] raise: Error withMessageText: 'That slot doesn`t have two states, only NormalState'.
+	self assertStateOfASlot: (aBoard slotNumber: 3) equals: NormalState.
+	self assertNumberOfCardsAffectingASlot: (aBoard slotNumber: 3) in: game equals: 0
 ]
 
 { #category : #tests }
@@ -2199,7 +2174,6 @@ GameTest >> testReversalCardOnlyChangeTheStateOfTheSelectedSlot [
 		on: aBoard
 		for: numberOfRoundsToBePlayed
 		withASetOf: cards.
-	game giveCard: Reversal createCard toPlayer: juan.
 	game giveCard: Reversal createCard toPlayer: juan.
 	
 	self assertStateOfASlot: (aBoard slotNumber: 10) equals: NormalState.
